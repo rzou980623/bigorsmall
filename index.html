@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>趣味数字大小比较</title>
+    <style>
+        body {
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+            background-color: #FFE5F1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            overflow-x: hidden;
+            touch-action: manipulation; /* 优化移动端触摸体验 */
+        }
+
+        .game-container {
+            background-color: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+            margin: 10px auto;
+        }
+
+        h1 {
+            color: #FF69B4;
+            font-size: 24px; /* 移动端字体稍小 */
+            margin: 10px 0;
+        }
+
+        .numbers {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* 移动端间距稍小 */
+            margin: 20px 0;
+        }
+
+        .number-box {
+            font-size: 36px; /* 移动端数字稍小 */
+            background-color: #FFB6C1;
+            border-radius: 15px;
+            padding: 15px 30px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            color: white;
+            border: none;
+            width: 40%; /* 控制按钮宽度 */
+            max-width: 150px;
+            -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
+        }
+
+        .number-box:active {
+            transform: scale(0.95); /* 移动端点击效果 */
+            background-color: #FF69B4;
+        }
+
+        /* 桌面端保留hover效果 */
+        @media (hover: hover) {
+            .number-box:hover {
+                transform: scale(1.1);
+                background-color: #FF69B4;
+            }
+        }
+
+        .score {
+            font-size: 20px;
+            margin: 15px 0;
+            color: #FF69B4;
+        }
+
+        .message {
+            font-size: 24px;
+            margin: 15px 0;
+            min-height: 36px;
+        }
+
+        .correct {
+            color: #4CAF50;
+        }
+
+        .wrong {
+            color: #f44336;
+        }
+
+        .airplane {
+            position: fixed;
+            font-size: 30px; /* 移动端飞机稍小 */
+            animation: fly 2s ease-out;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        @keyframes fly {
+            0% {
+                transform: translate(-50%, 0) rotate(-45deg);
+                bottom: -100px;
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -100vh) rotate(-45deg);
+                bottom: 100%;
+                opacity: 0;
+            }
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 360px) {
+            .number-box {
+                font-size: 28px;
+                padding: 12px 24px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+
+            .message {
+                font-size: 20px;
+            }
+
+            .score {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>哪个数字更大呢？</h1>
+        <div class="numbers">
+            <button class="number-box" id="number1">?</button>
+            <button class="number-box" id="number2">?</button>
+        </div>
+        <div class="message" id="message"></div>
+        <div class="score" id="score">得分：0/0</div>
+    </div>
+
+    <script>
+        let correctAnswers = 0;
+        let totalAttempts = 0;
+        let currentNumbers = [];
+
+        // 防止双击放大
+        document.addEventListener('dblclick', function(e) {
+            e.preventDefault();
+        });
+
+        function createAirplane() {
+            const airplane = document.createElement('div');
+            airplane.className = 'airplane';
+            airplane.textContent = '✈️';
+            airplane.style.left = Math.random() * 80 + 10 + '%';
+            document.body.appendChild(airplane);
+            
+            airplane.addEventListener('animationend', () => {
+                airplane.remove();
+            });
+        }
+
+        function generateNumbers() {
+            const num1 = Math.floor(Math.random() * 100);
+            let num2;
+            do {
+                num2 = Math.floor(Math.random() * 100);
+            } while (num2 === num1);
+            
+            currentNumbers = [num1, num2];
+            document.getElementById('number1').textContent = num1;
+            document.getElementById('number2').textContent = num2;
+            document.getElementById('message').textContent = '';
+        }
+
+        function checkAnswer(selectedIndex) {
+            totalAttempts++;
+            const isCorrect = selectedIndex === 0 ? 
+                currentNumbers[0] > currentNumbers[1] : 
+                currentNumbers[1] > currentNumbers[0];
+
+            if (isCorrect) {
+                correctAnswers++;
+                document.getElementById('message').textContent = '真棒！答对了！';
+                document.getElementById('message').className = 'message correct';
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => createAirplane(), i * 200);
+                }
+            } else {
+                document.getElementById('message').textContent = '哎呀，再试试看！';
+                document.getElementById('message').className = 'message wrong';
+            }
+
+            document.getElementById('score').textContent = 
+                `得分：${correctAnswers}/${totalAttempts}`;
+
+            setTimeout(generateNumbers, 1500);
+        }
+
+        document.getElementById('number1').addEventListener('click', () => checkAnswer(0));
+        document.getElementById('number2').addEventListener('click', () => checkAnswer(1));
+
+        // 移动端触摸优化
+        document.getElementById('number1').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            checkAnswer(0);
+        });
+        document.getElementById('number2').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            checkAnswer(1);
+        });
+
+        generateNumbers();
+    </script>
+</body>
+</html>
